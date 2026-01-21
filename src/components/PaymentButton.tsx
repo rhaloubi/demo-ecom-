@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { type Product } from "~/data/products";
 import { Button } from "~/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -12,7 +11,6 @@ interface PaymentButtonProps {
 
 export function PaymentButton({ product }: PaymentButtonProps) {
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handlePayment = async () => {
     try {
@@ -27,16 +25,18 @@ export function PaymentButton({ product }: PaymentButtonProps) {
         }),
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as {
+        error?: string;
+        data?: { checkout_url?: string };
+      };
 
       if (!response.ok) {
-        throw new Error(data.error || "Payment creation failed");
+        throw new Error(data.error ?? "Payment creation failed");
       }
 
       if (data.data?.checkout_url) {
         window.location.href = data.data.checkout_url;
       } else {
-        console.log("Checkout URL:", data);
         console.error("No checkout URL returned");
       }
     } catch (error) {

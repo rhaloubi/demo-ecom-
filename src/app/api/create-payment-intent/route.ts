@@ -4,7 +4,7 @@ import { products } from "~/data/products";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as { productId: string };
     const { productId } = body;
 
     const product = products.find((p) => p.id === productId);
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as Record<string, unknown>;
     return NextResponse.json(data);
   } catch (error) {
     console.error("Internal Error:", error);

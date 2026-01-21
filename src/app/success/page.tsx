@@ -4,12 +4,18 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 
 interface SuccessPageProps {
-  searchParams: Promise<{
-    [key: string]: string | string[] | undefined;
-  }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-async function verifyPayment(paymentIntentId: string) {
+interface PaymentData {
+  data?: {
+    status?: string;
+    amount?: number;
+    currency?: string;
+  };
+}
+
+async function verifyPayment(paymentIntentId: string): Promise<PaymentData | null> {
   try {
     const response = await fetch(
       `https://paymentgateway.redahaloubi.com/api/public/payment-intents/${paymentIntentId}`,
@@ -19,7 +25,7 @@ async function verifyPayment(paymentIntentId: string) {
       return null;
     }
 
-    return await response.json();
+    return (await response.json()) as PaymentData;
   } catch (error) {
     console.error("Verification error:", error);
     return null;
@@ -30,9 +36,9 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   const params = await searchParams;
   
   const paymentId = 
-    params.payment_intent_id || 
-    params["payment-intents_id"] || 
-    params.id || 
+    params.payment_intent_id ??
+    params["payment-intents_id"] ??
+    params.id ??
     params.payment_id;
 
   if (typeof paymentId !== "string") {
@@ -88,7 +94,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
               <div className="rounded-md bg-muted p-4 text-sm">
                 <p>Payment ID: {paymentId}</p>
                 <p>Status: {status}</p>
-                <p>Amount: {(paymentData?.data?.amount || 0) / 100} {paymentData?.data?.currency}</p>
+                <p>Amount: {(paymentData?.data?.amount ?? 0) / 100} {paymentData?.data?.currency}</p>
               </div>
             </>
           ) : (
@@ -98,7 +104,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
               </p>
               {paymentData && (
                 <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
-                  <p>Status: {status || "Unknown"}</p>
+                  <p>Status: {status ?? "Unknown"}</p>
                 </div>
               )}
             </>
